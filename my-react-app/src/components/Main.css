@@ -1,0 +1,123 @@
+.con{
+    display: flex;
+    justify-content: space-between;
+    margin-top: 10px;
+}
+.mainn{
+    display: flex;
+    justify-content: space-evenly;
+}
+body{
+    font-family: 'Roboto',sans-serif;
+}
+*{
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    text-decoration: none;
+}
+.sidebar{
+    position: fixed;
+    left: -250px;
+    width: 250px;
+    height: 100%;
+
+}
+.sidebar header{
+    font-size: 22px;
+    color: black;
+    text-align: center;
+    line-height: 70px;
+    user-select: none;
+}
+.sidebar ul a{
+    display: block;
+    height: 100%;
+    width: 100%;
+    line-height: 65px;
+    font-size: 20px;
+    color: black;
+    padding-left: 40px;
+    box-sizing: border-box;
+    border-top: 1px solid;
+    border-bottom: 1px solid black;
+    text-decoration: none;
+}
+.gg{
+    padding-left: 30px;
+    
+}
+ul li:hover a{
+    padding-left: 50px;
+}
+.gg:hover{
+    padding-left: 50px;
+}
+#check{
+    display: none;
+}
+label #btn,label #cancel{
+    position: absolute;
+    cursor: pointer;
+}
+label #btn{
+    left: 40px;
+    top: 25px;
+    font-size: 35px;
+    color: black;
+    transition: all .5s;
+}
+label #cancel{
+    z-index: 1111;
+    left: -195px;
+    top: 17px;
+    font-size: 30px;
+    color: black;
+    padding: 4px 9px;
+    transition: all .5s;
+}
+#check:checked ~ .sidebar{
+    left: 0;
+}
+#check:checked ~ label #btn{
+    left: 250px;
+    opacity: 0;
+    pointer-events: none;
+}
+#check:checked ~ label #cancel{
+    left: 195px;
+}
+#check:checked ~ .welcome-message{
+    margin-left: 250px;
+}
+.btn{
+    padding-bottom: -10px;
+}
+.dropit a:hover{
+    padding-left: 70px;
+}
+.welcome-message{
+    padding-left: 100px;
+}
+.welcome-message h2{
+    text-align: center;
+    margin-bottom: 10px;
+    
+}
+.dd{
+    display: flex;
+    justify-content: space-between;
+}
+.dd button{
+    background-color:transparent;
+      border:none;
+      cursor:pointer;
+      padding-right: 10px;
+      &:focus{
+        outline:none;
+      }
+      svg{
+        color:black;
+        font-size:1.2rem;
+      }
+}
