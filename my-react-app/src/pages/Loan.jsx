@@ -26,29 +26,37 @@
 
 
 
-
-// LoanDetails.js (React component)
-
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
-
 const LoanDetails = () => {
+  const [accountNumber, setAccountNumber] = useState('');
   const [loanDetails, setLoanDetails] = useState(null);
 
-  useEffect(() => {
-    fetchLoanDetails();
-  }, []);
-
   const fetchLoanDetails = () => {
-    fetch('/api/loan')
+    fetch(`/api/loan/${accountNumber}`)
       .then(response => response.json())
       .then(data => setLoanDetails(data))
       .catch(error => console.error('Error fetching loan details:', error));
   };
 
-  if (!loanDetails) {
-    return <p>Loading...</p>;
+  const handleAccountNumberChange = (e) => {
+    setAccountNumber(e.target.value);
+  };
+
+  let loanDetailsContent;
+
+  if (loanDetails) {
+    loanDetailsContent = (
+      <>
+        <p>Loan Amount: ${loanDetails.loan_amount}</p>
+        <p>Loan Term: {loanDetails.loan_period} months</p>
+        <p>Interest Rate: {loanDetails.interest_rate * 100}%</p>
+        <p>Total Repayment: ${(loanDetails.loan_amount * (1 + loanDetails.interest_rate)).toFixed(2)}</p>
+      </>
+    );
+  } else {
+    loanDetailsContent = <div>No loan details available.</div>;
   }
 
   return (
@@ -59,10 +67,23 @@ const LoanDetails = () => {
             <h2>Loan Details</h2>
             <Link to="/loanrule-edit" className="btn btn-success">Edit Rules</Link>
           </div>
-          <p>Loan Amount: ${loanDetails.loan_amount}</p>
-          <p>Loan Term: {loanDetails.loan_period} months</p>
-          <p>Interest Rate: {loanDetails.interest_rate * 100}%</p>
-          <p>Total Repayment: ${(loanDetails.loan_amount * (1 + loanDetails.interest_rate)).toFixed(2)}</p>
+
+          <div className="form-group">
+            <label htmlFor="accountNumberInput">Enter Account Number:</label>
+            <input
+              type="text"
+              className="form-control"
+              id="accountNumberInput"
+              value={accountNumber}
+              onChange={handleAccountNumberChange}
+            />
+          </div>
+
+          <button className="btn btn-primary" onClick={fetchLoanDetails}>
+            Fetch Loan Details
+          </button>
+
+          {loanDetailsContent}
         </div>
       </div>
     </div>
