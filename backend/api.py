@@ -21,26 +21,32 @@ class LoanRule(db.Model):
     loan_interest = db.Column(db.Float)
     loan_type = db.Column(db.String(50))
 
-loan_details = {
-    "loan_amount": 100000,
-    "loan_period": 36,
-    "cibil_score": 700,
-    "age": 30,
-}
+@app.route('/api/columns', methods=['GET'])
+def get_columns():
+    # Fetch column names from the database
+    column_names = [column.column_name for column in YourModel.query.all()]
+    return jsonify(column_names)
 
-# Default rules
-rules = {
-    "cibil_score": {
-        "operator": ">=",
-        "value": 700,
-        "interest_rate": 0.05,
-    },
-    "age": {
-        "operator": "<=",
-        "value": 35,
-        "interest_rate": 0.06,
-    },
-}
+# loan_details = {
+#     "loan_amount": 100000,
+#     "loan_period": 36,
+#     "cibil_score": 700,
+#     "age": 30,
+# }
+
+# # Default rules
+# rules = {
+#     "cibil_score": {
+#         "operator": ">=",
+#         "value": 700,
+#         "interest_rate": 0.05,
+#     },
+#     "age": {
+#         "operator": "<=",
+#         "value": 35,
+#         "interest_rate": 0.06,
+#     },
+# }
 
 @app.route('/api/loan', methods=['GET', 'POST'])
 def handle_loan_details():

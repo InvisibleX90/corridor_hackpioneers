@@ -1,65 +1,233 @@
 import React, { useState } from 'react';
 import axios from 'axios';
+import AddRule from './AddRule';
+
+
+// const LoanRuleEdit = () => {
+//   const [value, setValue] = useState({
+//     rule_id: '',
+//     dataType: '',
+//     operand: '', // Added dataType state
+//   });
+
+//   const handleChange = (e) => {
+//     const { name, value: inputValue } = e.target;
+
+//     if (name === 'dataType') {
+//       // Clear the previous criteria value when changing data type
+//       setValue((prevValue) => ({
+//         ...prevValue,
+//         operand: '',
+//         [name]: inputValue,
+//       }));
+//     } else {
+//       // Check data type and validate accordingly
+//       if (value.dataType === 'numeric' && isNaN(inputValue)) {
+//         // If numeric and not a valid number, do not update state
+//         return;
+//       }
+
+//       setValue((prevValue) => ({
+//         ...prevValue,
+//         [name]: inputValue,
+//       }));
+//     }
+//   };
+
+//   const handleSubmit = (e) => {
+//     e.preventDefault();
+
+//     const newRule = {
+//       rule_id: document.getElementById('rule_id').value,
+//       [value.operand]: {},
+//     };
+  
+//     axios
+//       .post('/api/rules', newRule)
+//       .then((response) => {
+//         console.log('New rule saved:', response.data);
+//         // Handle success or additional logic here
+//       })
+//       .catch((error) => console.error('Error saving new rule:', error));
+//   };
+
+//   const addrule = () => {
+//     return (
+//       <div>
+//         <AddRule />
+//       </div>
+//     );
+//   };
+
+//   return (
+//     <div className="container mt-5">
+//       <div className="row">
+//         <div className="col-md-6 offset-md-3">
+//           <form onSubmit={handleSubmit}>
+//             <div className="form-group">
+//               <label htmlFor="rule_id">rule_id (at most 3 letters):</label>
+//               <div className="input-group">
+//                 <input
+//                   type="text"
+//                   id="rule_id"
+//                   name="rule_id"
+//                   maxLength="3"
+//                   required
+//                   value={value.rule_id}
+//                   onChange={(e) => setValue((prevValue) => ({ ...prevValue, rule_id: e.target.value }))}
+//                 />
+//               </div>
+//             </div>
+
+//             <div className="form-group d-flex">
+//               <div className="mr-3">
+//                 <label htmlFor="dataType">Select Data Type:</label>
+//                 <select
+//                   className="form-control"
+//                   id="dataType"
+//                   name="dataType"
+//                   onChange={handleChange}
+//                   value={value.dataType}
+//                   required
+//                 >
+//                   <option value="">-- Select Data Type --</option>
+//                   <option value="numeric">Numeric</option>
+//                   <option value="string">String</option>
+//                 </select>
+//               </div>
+
+//               <div>
+//                 <label htmlFor="operand">Operand:</label>
+//                 {value.dataType === 'numeric' ? (
+//                   <input
+//                     type="numeric"
+//                     className="form-control"
+//                     id="operand"
+//                     name="operand"
+//                     placeholder="Number"
+//                     value={value.operand}
+//                     onChange={handleChange}
+//                     required
+//                   />
+//                 ) : (
+//                   <select
+//                     className="form-control"
+//                     id="operand"
+//                     name="operand"
+//                     onChange={handleChange}
+//                     value={value.operand}
+//                     required
+//                   >
+//                     <option value="">-- Select Variable --</option>
+//                     <option value="cibil">CIBIL Score</option>
+//                     <option value="loanAmount">Loan Amount</option>
+//                     <option value="loanPeriod">Loan Period</option>
+//                   </select>
+//                 )}
+//               </div>
+//             </div>
+
+//             <button type="button" className="btn btn-secondary" onClick={addrule}>
+//               Add Rule
+//             </button>
+
 
 const LoanRuleEdit = () => {
   const [value, setValue] = useState({
     rule_id: '',
-    lowercibil: '',
-    highercibil: '',
-    loweramt: '',
-    higheramt: '',
-    lowerperiod: '',
-    higherperiod: '',
+    criteria: '',
+    lowerLimit: '',
+    lowerOperator: '',
+    upperLimit: '',
+    inputType: '', // New state for input type
   });
 
-  const handleChange = (e) => {
+  const [limitRanges, setLimitRanges] = useState([]); // State to manage multiple limit ranges
+
+  const handleChange = (e, index) => {
     const { name, value: inputValue } = e.target;
-    setValue((prevValue) => ({
-      ...prevValue,
-      [name]: name === 'rule_id' ? inputValue.toUpperCase() : inputValue,
-    }));
+    const newLimitRanges = [...limitRanges];
+    newLimitRanges[index] = {
+      ...newLimitRanges[index],
+      [name]: inputValue,
+    };
+    setLimitRanges(newLimitRanges);
+  };
+
+  const handleChangeOne = (e) => {
+    const { name, value: inputValue } = e.target;
+
+    if (name === 'dataType') {
+      // Clear the previous criteria and operator values when changing data type
+      setValue((prevValue) => ({
+        ...prevValue,
+        operand: '',
+        operator: '',
+        [name]: inputValue,
+      }));
+    } else {
+      // Check data type and validate accordingly
+      if (value.dataType === 'numeric' && isNaN(inputValue)) {
+        // If numeric and not a valid number, do not update state
+        return;
+      }
+
+      setValue((prevValue) => ({
+        ...prevValue,
+        [name]: inputValue,
+      }));
+    }
+  };
+
+  const handleAddLimitRange = () => {
+    // Add the current limit range to the array
+    setLimitRanges([...limitRanges, { ...value }]);
+    // Clear the input fields for the next limit range
+    setValue({
+      rule_id: value.rule_id,
+      criteria: value.criteria,
+      lowerLimit: '',
+      lowerOperator: '',
+      upperLimit: '',
+      inputType: value.inputType,
+    });
+  };
+
+  const handleDeleteLimitRange = (index) => {
+    // Remove the limit range at the specified index
+    setLimitRanges((prevLimitRanges) => [
+      ...prevLimitRanges.slice(0, index),
+      ...prevLimitRanges.slice(index + 1),
+    ]);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    const newRule = {
-      rule_id: value.rule_id,
-      cibil: {
-        lowercibil: parseFloat(value.lowercibil),
-        highercibil: parseFloat(value.highercibil),
+    // Process and submit all limit ranges
+    const newRules = limitRanges.map((limitRange) => ({
+      rule_id: document.getElementById('rule_id').value,
+      [limitRange.criteria]: {
+        lowerLimit: limitRange.inputType === 'numeric' ? parseFloat(limitRange.lowerLimit) : limitRange.lowerLimit,
+        lowerOperator: limitRange.lowerOperator,
+        upperLimit: limitRange.inputType === 'numeric' ? parseFloat(limitRange.upperLimit) : limitRange.upperLimit,
       },
-      loanAmount: {
-        loweramt: parseFloat(value.loweramt),
-        higheramt: parseFloat(value.higheramt),
-      },
-      loanPeriod: {
-        lowerperiod: parseFloat(value.lowerperiod),
-        higherperiod: parseFloat(value.higherperiod),
-      },
-      loanInterest: parseFloat(document.getElementById('loanInterestInput').value) || 0.07,
-      loanType: document.getElementById('siCiDropdown').value,
-    };
+    }));
 
     axios
-      .post('/api/rules', newRule)
+      .post('/api/rules', newRules)
       .then((response) => {
-        console.log('New rule saved:', response.data);
-        // Handle success or additional logic here
+        console.log('New rules saved:', response.data);
       })
-      .catch((error) => console.error('Error saving new rule:', error));
+      .catch((error) => console.error('Error saving new rules:', error));
   };
 
-  const validateRuleId = () => {
-    const rule_idInput = document.getElementById('rule_id');
-    const errorMessage = document.getElementById('errorMessage');
+  const [showAddRule, setShowAddRule] = useState(false);
 
-    if (rule_idInput.value.length < 3) {
-      errorMessage.textContent = 'Rule ID must be 3 letters.';
-    } else {
-      errorMessage.textContent = '';
-      // You can handle form submission logic here
-    }
+  
+  const handleDeleteLastRule = () => {
+    // Remove the last added rule
+    setLimitRanges((prevLimitRanges) => prevLimitRanges.slice(0, -1));
   };
 
   return (
@@ -68,123 +236,105 @@ const LoanRuleEdit = () => {
         <div className="col-md-6 offset-md-3">
           <form onSubmit={handleSubmit}>
             <div className="form-group">
-              <label htmlFor="rule_id">Rule ID (3 letters):</label>
+              <label htmlFor="rule_id">rule_id (at most 3 letters):</label>
               <div className="input-group">
                 <input
                   type="text"
+                  onChange={(e) => setValue((prev) => ({ ...prev, rule_id: e.target.value }))}
                   id="rule_id"
                   name="rule_id"
                   maxLength="3"
-                  placeholder="Eg: RH1, RP5"
                   required
                   value={value.rule_id}
-                  onBlur={validateRuleId}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-            <div className="form-group">
-              <label htmlFor="cibilRange">CIBIL Score</label>
-              <div className="input-group">
-                <input
-                  type="number"
-                  className="form-control"
-                  id="lowercibil"
-                  name="lowercibil"
-                  placeholder="Lower limit"
-                  value={value.lowercibil}
-                  onChange={handleChange}
-                />
-                <p className='pp'>-</p>
-                <input
-                  type="number"
-                  className="form-control"
-                  id="highercibil"
-                  name="highercibil"
-                  placeholder="Upper limit"
-                  value={value.highercibil}
-                  onChange={handleChange}
                 />
               </div>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="loanAmountRange">Amount</label>
-              <div className="input-group">
-                <input
-                  type="number"
-                  className="form-control"
-                  id="loweramt"
-                  name="loweramt"
-                  placeholder="Lower limit"
-                  value={value.loweramt}
-                  onChange={handleChange}
-                />
-                <p className='pp'>-</p>
-                <input
-                  type="number"
-                  className="form-control"
-                  id="higheramt"
-                  name="higheramt"
-                  placeholder="Upper limit"
-                  value={value.higheramt}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="loanPeriodRange">Period</label>
-              <div className="input-group">
-                <input
-                  type="number"
-                  className="form-control"
-                  id="lowerperiod"
-                  name="lowerperiod"
-                  placeholder="Lower limit"
-                  value={value.lowerperiod}
-                  onChange={handleChange}
-                />
-                <p className='pp'>-</p>
-                <input
-                  type="number"
-                  className="form-control"
-                  id="higherperiod"
-                  name="higherperiod"
-                  placeholder="Upper limit"
-                  value={value.higherperiod}
-                  onChange={handleChange}
-                />
-              </div>
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="loanInterestInput">Interest</label>
-              <input
-                type="number"
-                className="form-control"
-                id="loanInterestInput"
-                name="loanInterestInput"
-                placeholder="Eg: 10"
-              />
-            </div>
-
-            <div className="form-group">
-              <label htmlFor="siCiDropdown">Loan Type</label>
+            <div>
+              <div>
+              <label htmlFor="dataType">Select Data Type:</label>
               <select
-                className="form-control"
-                id="siCiDropdown"
-                name="siCiDropdown"
+                  className="form-control"
+                  id="dataType"
+                  name="dataType"
+                  onChange={handleChangeOne}
+                  value={value.dataType}
+                  required
               >
-                <option value="">-- Select --</option>
-                <option value="Home Loan">Home Loan</option>
-                <option value="Student Loan">Student Loan</option>
-                <option value="Personal Loan">Personal Loan</option>
+                  <option value="">-- Select Data Type --</option>
+                  <option value="numeric">Numeric</option>
+                  <option value="string">String</option>
               </select>
+              </div>
+
+              <div>
+              <label htmlFor="operand">Operand:</label>
+              {value.dataType === 'numeric' ? (
+                <input
+                  type="numeric"
+                  className="form-control"
+                  id="operand"
+                  name="operand"
+                  placeholder="Number"
+                  value={value.operand}
+                  onChange={handleChangeOne}
+                  required
+                />
+              ) : (
+                <select
+                  className="form-control"
+                  id="operand"
+                  name="operand"
+                  onChange={handleChangeOne}
+                  value={value.operand}
+                  required
+                >
+                  <option value="">-- Select Variable --</option>
+                  <option value="cibil">CIBIL Score</option>
+                  <option value="loanAmount">Loan Amount</option>
+                  <option value="loanPeriod">Loan Period</option>
+                </select>
+              )}
+              </div>
             </div>
 
-            <button type="submit" className="btn btn-primary">Submit</button>
-            <p class="error-message" id="errorMessage"></p>
+            {limitRanges.map((limit, index) => (
+              <AddRule
+                key={index}
+                index={index}
+                limit={limit}
+                handleChange={handleChange}
+                handleDeleteLimitRange={handleDeleteLimitRange}
+              />
+            ))}
+
+            {showAddRule && (
+              <AddRule
+                index={limitRanges.length}
+                limit={value}
+                handleChange={handleChange}
+                handleDeleteLimitRange={() => {}}
+              />
+            )}
+
+            <div className="mt-3 d-flex justify-content-between">
+              <button type="button" className="btn btn-success mt-2" onClick={handleAddLimitRange}>
+                Add
+              </button>
+
+              <button type="button" className="btn btn-danger mt-2" onClick={handleDeleteLastRule}>
+                Delete 
+              </button>
+            </div>
+
+            <div className="mt-3 d-flex justify-content-between">
+            <button type="button" className="btn btn-primary">
+                Test
+              </button>
+              <button type="submit" className="btn btn-primary">
+                Submit
+              </button>
+            </div>
           </form>
         </div>
       </div>
