@@ -1,14 +1,21 @@
+import os
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from sqlalchemy.dialects.postgresql import JSON
 
 
 app = Flask(__name__)
 
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///site.db'  
+# load_dotenv()
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URI')  
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
+app.config['SQLALCHEMY_BINDS'] = {
+    'second_database': 'sqlite:///rule.db'
+}
+db_second = SQLAlchemy(app)
 
 class LoanRule(db.Model):
     rule_id = db.Column(db.String(3), primary_key=True)
@@ -21,10 +28,28 @@ class LoanRule(db.Model):
     loan_interest = db.Column(db.Float)
     loan_type = db.Column(db.String(50))
 
+class Rule(db_second.Model):
+    id = db_second.Column(db.Integer, primary_key=True)
+    rule_id = db_second.Column(db.String(3))
+    dynamic_columns = db_second.Column(JSON)  # Use JSON type for dynamic columns
+
+    def __repr__(self):
+        return f'<Rule {self.id}>'
+
+
+
 @app.route('/api/columns', methods=['GET'])
 def get_columns():
-    # Fetch column names from the database
-    column_names = [column.column_name for column in YourModel.query.all()]
+    inspector = db.inspect(db.engine)
+    tables = inspector.get_table_names()
+
+    # Fetch column names from all tables in the database
+    column_names = []
+
+    for table_name in tables:
+        columns = inspector.get_columns(table_name)
+        column_names.extend(column['name'] for column in columns)
+
     return jsonify(column_names)
 
 # loan_details = {
@@ -88,31 +113,24 @@ def handle_loan_details():
 #         return jsonify({criteria: data[criteria]})
 
 @app.route('/api/rules', methods=['POST'])
-def save_loan_rule():
+def add_rules():
     try:
-        data = request.json
+        new_rules = request.json
+        for rule_data in new_rules:
+            rule = Rule(
+                rule_id=rule_data['rule_id'],
+                dynamic_columns=rule_data[list(rule_data.keys())[1]]  # Assuming criteria is the second key in each rule
+            )
+            db.session.add(rule)
 
-        # Create a new LoanRule instance
-        new_rule = LoanRule(
-            rule_id=data['rule_id'],
-            cibil_lower=data['cibil']['lowercibil'],
-            cibil_higher=data['cibil']['highercibil'],
-            loan_amount_lower=data['loanAmount']['loweramt'],
-            loan_amount_higher=data['loanAmount']['higheramt'],
-            loan_period_lower=data['loanPeriod']['lowerperiod'],
-            loan_period_higher=data['loanPeriod']['higherperiod'],
-            loan_interest=data['loanInterest'],
-            loan_type=data['loanType']
-        )
-
-        # Add the new rule to the database
-        db.session.add(new_rule)
         db.session.commit()
-
-        return jsonify({'message': f'Loan rule saved successfully rule_id={new_rule.rule_id}'}), 201
+        return jsonify({"message": "Rules added successfully"}), 201
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    finally:
+        db.session.close()
+        
 def update_interest_rate():
     # Update interest rate based on rules and loan details
     interest_rate = 0.05  # default interest rate

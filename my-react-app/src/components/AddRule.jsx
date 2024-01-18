@@ -1,11 +1,26 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
+import axios from 'axios';
 
 const AddRule = () => {
   const [value, setValue] = useState({
     dataType: '',
     operand: '',
     operator: '', // New state for the operator
+    stringOptions: [], //for storing db columnnames
   });
+
+  useEffect(() => {
+    // Fetch column names from the backend and update the string options
+    axios.get('/api/columns')  
+      .then(response => {
+        const columnNames = response.data; 
+        setValue((prevValue) => ({
+          ...prevValue,
+          stringOptions: columnNames,
+        }));
+      })
+      .catch(error => console.error('Error fetching column names:', error));
+  }, []);
 
   const handleChange = (e) => {
     const { name, value: inputValue } = e.target;
@@ -114,9 +129,10 @@ const AddRule = () => {
             required
           >
             <option value="">-- Select Variable --</option>
-            <option value="cibil">CIBIL Score</option>
-            <option value="loanAmount">Loan Amount</option>
-            <option value="loanPeriod">Loan Period</option>
+            {value.stringOptions.map((option) => (
+              <option key={option} value={option}>{option}
+              </option>
+            ))}
           </select>
         )}
       </div>

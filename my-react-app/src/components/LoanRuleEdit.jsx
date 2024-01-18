@@ -1,135 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState , useEffect } from 'react';
 import axios from 'axios';
 import AddRule from './AddRule';
 
-
-// const LoanRuleEdit = () => {
-//   const [value, setValue] = useState({
-//     rule_id: '',
-//     dataType: '',
-//     operand: '', // Added dataType state
-//   });
-
-//   const handleChange = (e) => {
-//     const { name, value: inputValue } = e.target;
-
-//     if (name === 'dataType') {
-//       // Clear the previous criteria value when changing data type
-//       setValue((prevValue) => ({
-//         ...prevValue,
-//         operand: '',
-//         [name]: inputValue,
-//       }));
-//     } else {
-//       // Check data type and validate accordingly
-//       if (value.dataType === 'numeric' && isNaN(inputValue)) {
-//         // If numeric and not a valid number, do not update state
-//         return;
-//       }
-
-//       setValue((prevValue) => ({
-//         ...prevValue,
-//         [name]: inputValue,
-//       }));
-//     }
-//   };
-
-//   const handleSubmit = (e) => {
-//     e.preventDefault();
-
-//     const newRule = {
-//       rule_id: document.getElementById('rule_id').value,
-//       [value.operand]: {},
-//     };
-  
-//     axios
-//       .post('/api/rules', newRule)
-//       .then((response) => {
-//         console.log('New rule saved:', response.data);
-//         // Handle success or additional logic here
-//       })
-//       .catch((error) => console.error('Error saving new rule:', error));
-//   };
-
-//   const addrule = () => {
-//     return (
-//       <div>
-//         <AddRule />
-//       </div>
-//     );
-//   };
-
-//   return (
-//     <div className="container mt-5">
-//       <div className="row">
-//         <div className="col-md-6 offset-md-3">
-//           <form onSubmit={handleSubmit}>
-//             <div className="form-group">
-//               <label htmlFor="rule_id">rule_id (at most 3 letters):</label>
-//               <div className="input-group">
-//                 <input
-//                   type="text"
-//                   id="rule_id"
-//                   name="rule_id"
-//                   maxLength="3"
-//                   required
-//                   value={value.rule_id}
-//                   onChange={(e) => setValue((prevValue) => ({ ...prevValue, rule_id: e.target.value }))}
-//                 />
-//               </div>
-//             </div>
-
-//             <div className="form-group d-flex">
-//               <div className="mr-3">
-//                 <label htmlFor="dataType">Select Data Type:</label>
-//                 <select
-//                   className="form-control"
-//                   id="dataType"
-//                   name="dataType"
-//                   onChange={handleChange}
-//                   value={value.dataType}
-//                   required
-//                 >
-//                   <option value="">-- Select Data Type --</option>
-//                   <option value="numeric">Numeric</option>
-//                   <option value="string">String</option>
-//                 </select>
-//               </div>
-
-//               <div>
-//                 <label htmlFor="operand">Operand:</label>
-//                 {value.dataType === 'numeric' ? (
-//                   <input
-//                     type="numeric"
-//                     className="form-control"
-//                     id="operand"
-//                     name="operand"
-//                     placeholder="Number"
-//                     value={value.operand}
-//                     onChange={handleChange}
-//                     required
-//                   />
-//                 ) : (
-//                   <select
-//                     className="form-control"
-//                     id="operand"
-//                     name="operand"
-//                     onChange={handleChange}
-//                     value={value.operand}
-//                     required
-//                   >
-//                     <option value="">-- Select Variable --</option>
-//                     <option value="cibil">CIBIL Score</option>
-//                     <option value="loanAmount">Loan Amount</option>
-//                     <option value="loanPeriod">Loan Period</option>
-//                   </select>
-//                 )}
-//               </div>
-//             </div>
-
-//             <button type="button" className="btn btn-secondary" onClick={addrule}>
-//               Add Rule
-//             </button>
 
 
 const LoanRuleEdit = () => {
@@ -140,9 +12,26 @@ const LoanRuleEdit = () => {
     lowerOperator: '',
     upperLimit: '',
     inputType: '', // New state for input type
+    stringOptions: []
   });
 
+  // const [value, setValue] = useState({
+  //   stringOptions: [], //for storing db columnnames
+  // });
+
   const [limitRanges, setLimitRanges] = useState([]); // State to manage multiple limit ranges
+
+  useEffect(() => {
+    axios.get('/api/columns')  
+      .then(response => {
+        const columnNames = response.data; 
+        setValue((prevValue) => ({
+          ...prevValue,
+          stringOptions: columnNames,
+        }));
+      })
+      .catch(error => console.error('Error fetching column names:', error));
+  }, []);
 
   const handleChange = (e, index) => {
     const { name, value: inputValue } = e.target;
@@ -190,6 +79,7 @@ const LoanRuleEdit = () => {
       lowerOperator: '',
       upperLimit: '',
       inputType: value.inputType,
+      stringOptions: value.stringOptions,
     });
   };
 
@@ -277,7 +167,7 @@ const LoanRuleEdit = () => {
                   name="operand"
                   placeholder="Number"
                   value={value.operand}
-                  onChange={handleChangeOne}
+                  onChange={handleChange}
                   required
                 />
               ) : (
@@ -290,9 +180,10 @@ const LoanRuleEdit = () => {
                   required
                 >
                   <option value="">-- Select Variable --</option>
-                  <option value="cibil">CIBIL Score</option>
-                  <option value="loanAmount">Loan Amount</option>
-                  <option value="loanPeriod">Loan Period</option>
+                  {value.stringOptions.map((option) => (
+                    <option key={option} value={option}>{option}
+                    </option>
+                  ))}
                 </select>
               )}
               </div>
